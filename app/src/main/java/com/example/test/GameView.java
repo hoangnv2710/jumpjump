@@ -17,23 +17,17 @@ import java.util.Random;
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Player player;
     private List<Platform> platforms;
-    private Platform lastPlatform; // Track the last platform the player landed on
     private Handler handler = new Handler();
     private Runnable gameLoop;
-
     private Bitmap backgroundImage;
     private Bitmap platformBitmap;
     private Bitmap platformBitmapType2;
-    private float scrollOffset = 0;
-    private float scrollL; // Scroll distance set to 40% of the screen height
-    private float scrollSpeedMultiplier = 0.5f; // Variable to control scroll speed
-    private static final float PLATFORM_SPACING = 0.2f;
     private Random random;
     private int screenWidth, screenHeight;
     private int platformWidth, platformHeight;
     private int maxJumpX;
     private int maxJumpY;
-    private int level = 1;
+    private int passed = 0;
     public GameView(Context context) {
         super(context);
         getHolder().addCallback(this);
@@ -52,8 +46,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         int playerWidth = screenWidth / 7;
         int playerHeight = screenHeight / 10;
-        playerBitmap = Bitmap.createScaledBitmap(playerBitmap, playerWidth, playerHeight, false);
 
+        playerBitmap = Bitmap.createScaledBitmap(playerBitmap, playerWidth, playerHeight, false);
         adjustBitmapSize(platformBitmapOriginal, platformBitmapType2Original);
 
         player = new Player(playerBitmap, screenWidth, screenHeight, context);
@@ -104,34 +98,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             }
             count ++;
         }
-
-
-
-
-                // Only update if the platform is higher than the last one
-//                if (lastPlatform == null || platform.getY() < lastPlatform.getY()) {
-//                    scrollOffset = scrollL * scrollSpeedMultiplier; // Use scrollSpeedMultiplier
-//                    lastPlatform = platform;
-//                }
-//                platform.setY(platform.getY() + player.getVelocityY());
-//                // Adjust the player's position and reset the velocity
-//                player.setY(platform.getY() - player.getBounds().height());
-//                player.setVelocityY(player.getJumpStrength());
-//                break;
-//            }
-//        }
-
-//        // Apply scrollOffset to the platforms and player position
-////        if (scrollOffset > 0) {
-////            for (Platform platform : platforms) {
-////                platform.setY(platform.getY() + (int) scrollOffset);
-////            }
-////            player.setY(player.getY() + (int) scrollOffset);
-////            scrollOffset = 0; // Reset scrollOffset after applying
-////        }
-//
-//        // Create platforms as needed
-//        createPlatform();
     }
 
     public void drawGame() {
@@ -177,7 +143,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         int platformY = screenHeight - 300;
         Platform firstPlatform = new Platform(platformBitmap, platformX, platformY, 1);
         platforms.add(firstPlatform);
-        lastPlatform = firstPlatform; // Initialize the last platform as the first platform
         player.setY(platformY - player.getBounds().height());
         createPlatform();
         platformWidth = platformBitmap.getWidth();
@@ -190,38 +155,26 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             int lastPlatformY = platforms.get(platforms.size() - 1).getY();
             int platformX;
             int platformY;
+            int level = Platform.getLevel(passed);
 
-            int rad= random.nextInt( maxJumpX);
+            int rad = random.nextInt( maxJumpX * 1/level ) + maxJumpX * (1 - 1/level);
             if ( lastPlatformX <= platformWidth) {
                 platformX = lastPlatformX + platformWidth + rad;
-            } else if (lastPlatformX +  platformWidth >= screenWidth) {
+            } else if (lastPlatformX +  2 * platformWidth >= screenWidth) {
                 platformX = lastPlatformX - platformWidth - rad;
             } else {
                 int mul = random.nextInt(2);
                 rad = (mul == 0) ? - (rad + platformWidth)  : rad + platformWidth;
                 platformX = lastPlatformX + rad;
-                platformX = platformX < 0 ? 0 : platformX;
-                platformX = platformX > screenWidth - platformBitmap.getWidth() ? screenWidth - platformBitmap.getWidth() : platformX;
             }
-            platformY= lastPlatformY - maxJumpY;
-//
-
+            platformX = platformX < 0 ? 0 : platformX;
+            platformX = platformX > screenWidth - platformWidth ? screenWidth - platformWidth : platformX;
+            rad = (maxJumpX + platformHeight) * (1 - 2/(level + 2)) + random.nextInt((maxJumpX + platformHeight) * 2/(level + 2)) - platformHeight * 1 / level  ;
+            platformY= lastPlatformY - rad;
             platforms.add(new Platform(platformBitmap, platformX, platformY,1));
+            passed ++;
             Log.i("new plat y: ",""+platformY);
         }
-
-
-//            if (platformY + scrollOffset >= -platformBitmap.getHeight()) {
-//                int type = 1;
-//                if (type == 1) {
-//                    platforms.add(new Platform(platformBitmap, platformX, platformY, type));
-//                } else {
-//                    int velocityX = random.nextInt(5) + 1;
-//                    int minX = 0;
-//                    int maxX = screenWidth - platformBitmapType2.getWidth();
-//                    platforms.add(new Platform(platformBitmapType2, platformX, platformY, type, velocityX, minX, maxX));
-//                }
-//            }
 
     }
 
