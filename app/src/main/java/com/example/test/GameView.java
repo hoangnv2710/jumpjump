@@ -30,6 +30,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private static final float PLATFORM_SPACING = 0.2f;
     private Random random;
     private int screenWidth, screenHeight;
+    private int platformWidth, platformHeight;
     private int maxJumpX;
     private int maxJumpY;
     private int level = 1;
@@ -42,7 +43,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         screenHeight = displayMetrics.heightPixels;
 
         // Set scrollL to 40% of the screen height
-        scrollL = 0.4f * screenHeight;
 
         Bitmap playerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.player);
         Bitmap platformBitmapOriginal = BitmapFactory.decodeResource(getResources(), R.drawable.lognot);
@@ -180,33 +180,31 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         lastPlatform = firstPlatform; // Initialize the last platform as the first platform
         player.setY(platformY - player.getBounds().height());
         createPlatform();
+        platformWidth = platformBitmap.getWidth();
+        platformHeight = platformBitmap.getHeight();
     }
 
     private void createPlatform() {
-        while (platforms.get(platforms.size() - 1).getY() >= maxJumpY / 2 ) {
+        while (platforms.get(platforms.size() - 1).getY() >= maxJumpY / 2  ) {
             int lastPlatformX = platforms.get(platforms.size() - 1).getX();
             int lastPlatformY = platforms.get(platforms.size() - 1).getY();
             int platformX;
             int platformY;
 
-            if (lastPlatformX <= maxJumpX) {
-                platformX = random.nextInt( lastPlatformX + platformBitmap.getWidth() + maxJumpX);
-            } else if (lastPlatformX + platformBitmap.getWidth() + maxJumpX > screenWidth) {
-                platformX = screenWidth - lastPlatformX - platformBitmap.getWidth() + random.nextInt( screenWidth - lastPlatformX + maxJumpX);
+            int rad= random.nextInt( maxJumpX);
+            if ( lastPlatformX <= platformWidth) {
+                platformX = lastPlatformX + platformWidth + rad;
+            } else if (lastPlatformX +  platformWidth >= screenWidth) {
+                platformX = lastPlatformX - platformWidth - rad;
             } else {
-                platformX = screenWidth - lastPlatformX - maxJumpX - platformBitmap.getWidth() + random.nextInt( platformBitmap.getWidth()  + 2 * maxJumpX );
+                int mul = random.nextInt(2);
+                rad = (mul == 0) ? - (rad + platformWidth)  : rad + platformWidth;
+                platformX = lastPlatformX + rad;
+                platformX = platformX < 0 ? 0 : platformX;
+                platformX = platformX > screenWidth - platformBitmap.getWidth() ? screenWidth - platformBitmap.getWidth() : platformX;
             }
-            platformY= lastPlatformY + random.nextInt(maxJumpY);
-            if (platformX <= lastPlatformX + platformBitmap.getWidth() + maxJumpX/2 &&
-                    platformX  >= lastPlatformX - platformBitmap.getWidth() - maxJumpX/2) {
-                platformY = lastPlatformY - random.nextInt((int) maxJumpY * 1/6) - maxJumpY*5/6 - platformBitmap.getHeight() / 2;
-            } else {
-                int x = (platformX > lastPlatformX) ? platformX - lastPlatformX - platformBitmap.getWidth() - maxJumpX/2 : lastPlatformX - platformBitmap.getWidth() - platformX - maxJumpX/2;
-                int t = x / player.getSpeedX();
-                int g = player.getGravity() > 0 ? player.getGravity() : - player.getGravity();
-                int newMaxY = 1/2 * g * t * t ;
-                platformY= lastPlatformY - random.nextInt(maxJumpY - newMaxY) - platformBitmap.getHeight() / 2;
-            }
+            platformY= lastPlatformY - maxJumpY;
+//
 
             platforms.add(new Platform(platformBitmap, platformX, platformY,1));
             Log.i("new plat y: ",""+platformY);
