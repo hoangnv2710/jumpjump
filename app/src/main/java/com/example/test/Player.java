@@ -15,9 +15,9 @@ public class Player {
     private int minY;
     private int screenWidth;
     private int screenHeight;
-    private int gravity = -5;
-    private int jumpStrength = 60;
-    private int speedX = 20;
+    private int gravity = -2;
+    private int jumpStrength = 30;
+    private int speedX = 10;
     private int maxJumpX;
     private int maxJumpY;
     public Player(Bitmap bitmap, int screenWidth, int screenHeight, Context context) {
@@ -42,7 +42,7 @@ public class Player {
     }
 
     public boolean isStop() {
-        if(y <= 1/3 * screenWidth + bitmap.getHeight() && velocityY >= 0) {
+        if(y <= maxJumpY  + bitmap.getHeight() && velocityY >= 0) {
             return true;
         }
         return false;
