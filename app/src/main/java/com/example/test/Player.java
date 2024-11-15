@@ -11,8 +11,7 @@ public class Player {
     private int x;
     private int y;
     private int velocityY;
-    private int maxY;
-    private int minY;
+
     private int screenWidth;
     private int screenHeight;
     private int gravity = -2;
@@ -24,17 +23,12 @@ public class Player {
         this.bitmap = bitmap;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
-
         this.x = (screenWidth - bitmap.getWidth()) / 2;
-
         // Convert 3cm to pixels
         float distanceFromBottomInCm = 3.0f;
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         int distanceFromBottomInPx = (int) (distanceFromBottomInCm * metrics.densityDpi / 2.54f);
-
         this.y = screenHeight - distanceFromBottomInPx;
-        this.maxY = screenHeight - bitmap.getHeight();
-        this.minY = 0;
         this.velocityY = jumpStrength;
         int g = (gravity > 0) ? gravity : -gravity;
         maxJumpX = jumpStrength/g * speedX;
@@ -58,15 +52,15 @@ public class Player {
 
     public void moveLeft() {
         x -= speedX;
-        if (x < 0) {
-            x = screenWidth;
+        if (x < -bitmap.getWidth()/2) {
+            x = screenWidth - bitmap.getWidth()/2;
         }
     }
 
     public void moveRight() {
         x += speedX;
-        if (x > screenWidth) {
-            x = 0;
+        if (x > screenWidth - bitmap.getWidth()/2) {
+            x = -bitmap.getWidth()/2;
         }
     }
 
