@@ -42,28 +42,17 @@ public class Player {
     }
 
     public boolean isStop() {
-        if(y <= maxJumpY  + bitmap.getHeight() && velocityY >= 0) {
+        if(y <= maxJumpY + bitmap.getHeight() && velocityY >= 0) {
             return true;
         }
         return false;
     }
 
     public void update() {
-
         if (!isStop()) {
-            y -= velocityY;  // Update player’s vertical position
+            y -= velocityY;
         }
-
         velocityY += gravity;
-//        if (y > maxY) {
-//            y = maxY;
-//            velocityY = jumpStrength;
-//        }
-//
-//        if (y < minY) {
-//            y = minY;
-//            velocityY = jumpStrength;
-//        }
     }
 
 

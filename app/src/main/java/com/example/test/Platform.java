@@ -11,7 +11,7 @@ public class Platform {
     private int type;
     private int velocityX; // Velocity for horizontal movement
     private int minX, maxX; // Boundaries for horizontal movement
-    private static int level;
+
     public Platform(Bitmap bitmap, int x, int y, int type) {
         this.bitmap = bitmap;
         this.x = x;
@@ -69,27 +69,7 @@ public class Platform {
 //        return level;
 //    }
 
-    public static int getLevel(int platformPassed) {
-        if (platformPassed < 15) {
-            level = 1;
-        } else if (platformPassed < 20) {
-            level = 2;
-        } else if (platformPassed < 25){
-            level = 3;
-        }
-        else if (platformPassed < 30){
-            level = 4;
-        }
-        else if (platformPassed < 35){
-            level = 5;
-        }
-        else if (platformPassed < 40){
-            level = 6;
-        } else {
-            level = 7;
-        }
-        return level;
-    }
+
 
     // Method to update position for moving platforms
     public void updateP() {
