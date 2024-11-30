@@ -1,6 +1,8 @@
 package com.example.test;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -30,15 +32,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private int passed = 0;
     private int level = 0;
     private int maxLevel = 5;
+    boolean isOver = false;
+//    private Context context;
     public GameView(Context context) {
         super(context);
+//        this.context = context;
         getHolder().addCallback(this);
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         screenWidth = displayMetrics.widthPixels;
         screenHeight = displayMetrics.heightPixels;
 
         Bitmap playerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.player);
-        Bitmap platformBitmapOriginal = BitmapFactory.decodeResource(getResources(), R.drawable.lognot);
+        Bitmap platformBitmapOriginal = BitmapFactory.decodeResource(getResources(), R.drawable.cloud1);
         Bitmap platformBitmapType2Original = BitmapFactory.decodeResource(getResources(), R.drawable.lognot);
         backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.back_ing);
         backgroundImage = Bitmap.createScaledBitmap(backgroundImage, screenWidth, screenHeight, true);
@@ -67,30 +72,39 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update() {
-        if (player.getVelocityY() <= - platformHeight) {
-            player.setVelocityY(-platformHeight + 1);
+        if(!isOver) {
+            if (player.getVelocityY() <= - platformHeight) {
+                player.setVelocityY(-platformHeight + 1);
+            }
+            player.update();
+            if(player.getY() > screenHeight) {
+                gameOver();
+                isOver = true;
+            }
+            Log.i("playery: ",""+player.getY());
+            int count = 0;
+            while (count < platforms.size()) {
+                Platform platform = platforms.get(count);
+                if (player.getBounds().intersect(platform.getBounds()) && player.getVelocityY() <= 0 &&
+                        platform.getY() + platformHeight > player.getY() + player.getBounds().height()
+                        && platform.getX() <= player.getX() + player.getBounds().width()/2 &&
+                        platform.getX() + platform.getBounds().width() >= player.getX() + player.getBounds().width()/2){
+                    player.setY(platform.getY() - player.getBounds().height());
+                    player.setVelocityY(player.getJumpStrength());
+                }
+                if (player.isStop()) {
+                    platform.setY(platform.getY() + player.getVelocityY());
+                }
+                if (platform.getY() >= screenHeight - platform.getBounds().height()) {
+                    platforms.remove(count);
+                    count --;
+                    createPlatform();
+                }
+                count ++;
+            }
         }
-        player.update();
-        int count = 0;
-        while (count < platforms.size()) {
-            Platform platform = platforms.get(count);
-            if (player.getBounds().intersect(platform.getBounds()) && player.getVelocityY() <= 0 &&
-                    platform.getY() + platformHeight > player.getY() + player.getBounds().height()
-            && platform.getX() <= player.getX() + player.getBounds().width()/2 &&
-                    platform.getX() + platform.getBounds().width() >= player.getX() + player.getBounds().width()/2){
-                player.setY(platform.getY() - player.getBounds().height());
-                player.setVelocityY(player.getJumpStrength());
-            }
-            if (player.isStop()) {
-                platform.setY(platform.getY() + player.getVelocityY());
-            }
-            if (platform.getY() >= screenHeight - platform.getBounds().height()) {
-                platforms.remove(count);
-                count --;
-                createPlatform();
-            }
-            count ++;
-        }
+
+
 
     }
 
@@ -189,5 +203,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             level = platformPassed / 10 ;
         }
         return level < maxLevel ? level : maxLevel;
+    }
+    public void gameOver() {
+        Context context = getContext();
+        if (context instanceof Activity) {
+            Activity activity = (Activity) context;
+
+            // Tạo intent để chuyển sang GameOverActivity
+            Intent intent = new Intent(activity, GameOverActivity.class);
+
+            // Chuyển sang GameOverActivity
+            activity.startActivity(intent);
+            activity.finish(); // Kết thúc Activity hiện tại (nếu cần)
+        }
     }
 }

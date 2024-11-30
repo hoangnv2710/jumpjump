@@ -1,5 +1,6 @@
 package com.example.test;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
@@ -20,11 +21,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
 
         FrameLayout gameContainer = findViewById(R.id.game_container);
-
         gameView = new GameView(this);
         gameContainer.addView(gameView);
 
@@ -33,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 gameView.movePlayerLeft();
-                handler.postDelayed(this, 10); // Lặp lại sau 16ms
+                handler.postDelayed(this, 16); // Lặp lại sau 16ms
             }
         };
 
@@ -42,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 gameView.movePlayerRight();
-                handler.postDelayed(this, 10); // Lặp lại sau 16ms
+                handler.postDelayed(this, 16); // Lặp lại sau 16ms
             }
         };
 
@@ -71,5 +70,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+
     }
+
 }

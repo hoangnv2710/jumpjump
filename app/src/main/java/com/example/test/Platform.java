@@ -65,12 +65,6 @@ public class Platform {
         this.type = type;
     }
 
-//    public static int getLevel() {
-//        return level;
-//    }
-
-
-
     // Method to update position for moving platforms
     public void updateP() {
         if (type == 2) {
