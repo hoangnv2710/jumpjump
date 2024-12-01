@@ -209,10 +209,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         if (context instanceof Activity) {
             Activity activity = (Activity) context;
 
-            // Tạo intent để chuyển sang GameOverActivity
             Intent intent = new Intent(activity, GameOverActivity.class);
 
-            // Chuyển sang GameOverActivity
             activity.startActivity(intent);
             activity.finish(); // Kết thúc Activity hiện tại (nếu cần)
         }
