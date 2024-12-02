@@ -6,11 +6,17 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.media.MediaPlayer;
+
+import androidx.core.content.res.ResourcesCompat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +30,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Bitmap backgroundImage;
     private Bitmap platformBitmap;
     private Bitmap platformBitmapType2;
+    private Bitmap heartBitmap;
     private Random random;
     private int screenWidth, screenHeight;
     private int platformWidth, platformHeight;
@@ -31,35 +38,82 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private int maxJumpY;
     private int passed = 0;
     private int level = 0;
+    private static int score = 0;
     private int maxLevel = 5;
+    private MediaPlayer backgroundMusic;
     boolean isOver = false;
-//    private Context context;
+    private Platform lastTouchedPlatform = null;
+    private int life = 3; // Biến đếm số mạng của người chơi
+    private Paint lifePaint = new Paint();
+    private Paint scorePaint = new Paint();
+
+
     public GameView(Context context) {
         super(context);
-//        this.context = context;
         getHolder().addCallback(this);
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         screenWidth = displayMetrics.widthPixels;
         screenHeight = displayMetrics.heightPixels;
+        initBackgroundMusic(context);
 
-        Bitmap playerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.player);
-        Bitmap platformBitmapOriginal = BitmapFactory.decodeResource(getResources(), R.drawable.cloud1);
-        Bitmap platformBitmapType2Original = BitmapFactory.decodeResource(getResources(), R.drawable.lognot);
-        backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.back_ing);
+        Bitmap playerBitmapOnPlatform = BitmapFactory.decodeResource(getResources(), R.drawable.player_on_platform);
+        Bitmap playerBitmapInAir = BitmapFactory.decodeResource(getResources(), R.drawable.player_in_air);
+
+        Bitmap platformBitmapOriginal = BitmapFactory.decodeResource(getResources(), R.drawable.blue_cloud);
+        Bitmap platformBitmapType2Original = BitmapFactory.decodeResource(getResources(), R.drawable.blue_cloud);
+        backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.back_ing_1);
         backgroundImage = Bitmap.createScaledBitmap(backgroundImage, screenWidth, screenHeight, true);
+
+        // Sử dụng font từ thư mục res/font
+        Typeface customFont = ResourcesCompat.getFont(context, R.font.font_life);
+
+        if (customFont != null) {
+            lifePaint.setTypeface(customFont);
+        } else {
+            Log.e("GameView", "Custom font could not be loaded!");
+        }
+
+        lifePaint.setColor(Color.BLACK);
+        lifePaint.setTextSize(screenWidth/10);
+        lifePaint.setAntiAlias(true);
+
+        Typeface customFontScore = ResourcesCompat.getFont(context, R.font.font_score);
+
+        if (customFontScore != null) {
+            scorePaint.setTypeface(customFontScore);
+        } else {
+            Log.e("GameView", "Custom font for scorePaint could not be loaded!");
+        }
+
+        scorePaint.setColor(Color.BLACK); // Đổi màu theo ý muốn
+        scorePaint.setTextSize(screenWidth / 10); // Kích thước chữ cho điểm số
+        scorePaint.setAntiAlias(true);
+
 
         int playerWidth = screenWidth / 8;
         int playerHeight = screenHeight / 12;
-        playerBitmap = Bitmap.createScaledBitmap(playerBitmap, playerWidth, playerHeight, false);
-        adjustBitmapSize(platformBitmapOriginal, platformBitmapType2Original);
+        playerBitmapOnPlatform = Bitmap.createScaledBitmap(playerBitmapOnPlatform, playerWidth, playerHeight, false);
+        playerBitmapInAir = Bitmap.createScaledBitmap(playerBitmapInAir, playerWidth, playerHeight, false);
 
-        player = new Player(playerBitmap, screenWidth, screenHeight, context);
+        //Platform bitmap scale
+        int platform1Width = screenWidth / 6;
+        int platform1Height = screenHeight / 30;
+        platformBitmap = Bitmap.createScaledBitmap(platformBitmapOriginal, platform1Width, platform1Height, true);
+        platformBitmapType2 = Bitmap.createScaledBitmap(platformBitmapType2Original, platform1Width, platform1Height, true);
+
+        player = new Player(playerBitmapOnPlatform, playerBitmapInAir, screenWidth, screenHeight, context);
         maxJumpX = player.getMaxJumpX();
         maxJumpY = player.getMaxJumpY();
-        Log.i("MAXY",""+maxJumpY);
+        Log.i("MAXY", "" + maxJumpY);
         platforms = new ArrayList<>();
         random = new Random();
         createFirstPlatform();
+
+        // Tải hình heart và làm nhỏ kích thước 10 lần
+        Bitmap heartBitmapOriginal = BitmapFactory.decodeResource(getResources(), R.drawable.heart);
+        int heartWidth = heartBitmapOriginal.getWidth() / 10;
+        int heartHeight = heartBitmapOriginal.getHeight() / 10;
+        heartBitmap = Bitmap.createScaledBitmap(heartBitmapOriginal, heartWidth, heartHeight, true);
 
         gameLoop = new Runnable() {
             @Override
@@ -72,41 +126,58 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update() {
-        if(!isOver) {
-            if (player.getVelocityY() <= - platformHeight) {
+        if (!isOver) {
+            if (player.getVelocityY() <= -platformHeight) {
                 player.setVelocityY(-platformHeight + 1);
             }
             player.update();
-            if(player.getY() > screenHeight) {
-                gameOver();
-                isOver = true;
-            }
-            Log.i("playery: ",""+player.getY());
+
             int count = 0;
             while (count < platforms.size()) {
                 Platform platform = platforms.get(count);
+
+                // Update moving platforms
+                if (platform.getType() == 2) {
+                    platform.updateP(); // Move the platform horizontally
+                }
+
                 if (player.getBounds().intersect(platform.getBounds()) && player.getVelocityY() <= 0 &&
-                        platform.getY() + platformHeight > player.getY() + player.getBounds().height()
-                        && platform.getX() <= player.getX() + player.getBounds().width()/2 &&
-                        platform.getX() + platform.getBounds().width() >= player.getX() + player.getBounds().width()/2){
+                        platform.getY() + platformHeight > player.getY() + player.getBounds().height() &&
+                        platform.getX() <= player.getX() + player.getBounds().width() / 2 &&
+                        platform.getX() + platform.getBounds().width() >= player.getX() + player.getBounds().width() / 2) {
+                    if (platform != lastTouchedPlatform) {
+                        lastTouchedPlatform = platform; // Cập nhật platform cuối cùng
+                        score++; // Tăng điểm
+                    }
                     player.setY(platform.getY() - player.getBounds().height());
                     player.setVelocityY(player.getJumpStrength());
                 }
+
                 if (player.isStop()) {
                     platform.setY(platform.getY() + player.getVelocityY());
                 }
+
                 if (platform.getY() >= screenHeight - platform.getBounds().height()) {
                     platforms.remove(count);
-                    count --;
-                    createPlatform();
+                    count--;
+                    createPlatform(); // Create a new platform
                 }
-                count ++;
+                count++;
+
+            }
+
+            if (player.getY() > screenHeight) {
+                life--; // Decrease the life count
+                if (life > 0) {
+                    resetGame();
+                } else {
+                    gameOver();
+                    isOver = true;
+                }
             }
         }
-
-
-
     }
+
 
     public void drawGame() {
         Canvas canvas = getHolder().lockCanvas();
@@ -117,6 +188,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             }
             player.draw(canvas);
 
+            // Vẽ hình heart đã làm nhỏ ở góc trên cùng bên trái
+            int heartX = 20; // Cách lề trái 20px
+            int heartY = 20; // Cách lề trên 20px
+            canvas.drawBitmap(heartBitmap, heartX, heartY, null);
+            canvas.drawText("x" + life, heartX+heartBitmap.getWidth(), heartY+heartBitmap.getHeight(), lifePaint);
+            canvas.drawText("score: " + score*50, screenWidth/2, heartY+heartBitmap.getHeight(), lifePaint);
             getHolder().unlockCanvasAndPost(canvas);
         }
     }
@@ -140,22 +217,23 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    }
 
     private void createFirstPlatform() {
         int platformX = screenWidth / 2 - platformBitmap.getWidth() / 2;
         int platformY = screenHeight - 300;
         Platform firstPlatform = new Platform(platformBitmap, platformX, platformY, 1);
         platforms.add(firstPlatform);
+        lastTouchedPlatform = firstPlatform;
         player.setY(platformY - player.getBounds().height());
         platformWidth = platformBitmap.getWidth();
         platformHeight = platformBitmap.getHeight();
-        Log.i("H;W",platformHeight + " ;" + platformWidth);
         createPlatform();
     }
 
     private void createPlatform() {
-        while (platforms.get(platforms.size() - 1).getY() >= maxJumpY/3) {
+        while (platforms.get(platforms.size() - 1).getY() >= maxJumpY / 3) {
             int lastPlatformX = platforms.get(platforms.size() - 1).getX();
             int lastPlatformY = platforms.get(platforms.size() - 1).getY();
             int platformX;
@@ -163,9 +241,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             int level = getLevel(passed);
 
             int rad = random.nextInt(2 * maxJumpX);
-            int mul = lastPlatformX + platformWidth / 2 > screenWidth/ 2 ? -1 : 1;
-            mul *= (random.nextInt(4)  > 0 ? 1 : -1);
-            //Log.i("ttt",lastPlatformX + platformWidth/2 + "; " + screenWidth/2 + " ; " + mul);
+            int mul = lastPlatformX + platformWidth / 2 > screenWidth / 2 ? -1 : 1;
+            mul *= (random.nextInt(4) > 0 ? 1 : -1);
             rad = mul * (rad + platformWidth);
             platformX = lastPlatformX + rad;
             platformX = platformX < 0 ? 0 : platformX;
@@ -174,36 +251,48 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             diffX -= platformWidth;
             int maxY = diffX <= maxJumpX ? maxJumpY :
                     player.getJumpStrength() * (diffX / player.getSpeedX()) + player.getGravity() * (diffX / player.getSpeedX()) * (diffX / player.getSpeedX()) / 2;
-            rad =  random.nextInt(maxY / maxLevel) + maxY * (maxLevel - 1)/ (maxLevel * ( maxLevel + 1 - level ));
-            //Log.i("rad + level",maxLevel * ( maxLevel + 1 - level ) + ":" + level);
+            rad = random.nextInt(maxY / maxLevel) + maxY * (maxLevel - 1) / (maxLevel * (maxLevel + 1 - level));
             platformY = lastPlatformY - rad - platformHeight;
-            // platforms.add(new Platform(platformBitmap, platformX, platformY,2,10,0,screenWidth - platformWidth));
-            platforms.add(new Platform(platformBitmap, platformX, platformY,1));
-            //Log.i("rad",""+rad + "," + (platformY - lastPlatformY) + "," + maxJumpY + "," + platformHeight);
-            passed ++;
-//            for(int i = 0; i < platforms.size(); i++){
-//                Log.i("plat x,y: ",i + ": " + platforms.get(i).getX() +" , "+ platforms.get(i).getY());
-//            }
 
-        }
+            // Randomize platform type (1: static, 2: moving horizontally)
+            int platformType = random.nextInt(10) < 2 ? 2 : 1; // 20% chance for type 2
 
-    }
+            if (platformType == 2) {
+                // Create moving platform
+                int velocityX = random.nextInt(4) + 2; // Random velocity between 2 and 5
+                int minX = 0;
+                int maxX = screenWidth - platformWidth;
+                platforms.add(new Platform(platformBitmap, platformX, platformY, platformType, velocityX, minX, maxX));
+            } else {
+                // Create static platform
+                platforms.add(new Platform(platformBitmap, platformX, platformY, platformType));
+            }
 
-    private void adjustBitmapSize(Bitmap platformBitmapOriginal, Bitmap platformBitmapType2Original) {
-        if (screenWidth > 0 && screenHeight > 0) {
-            int newWidth = screenWidth / 6;
-            int newHeight = screenHeight / 30;
-            platformBitmap = Bitmap.createScaledBitmap(platformBitmapOriginal, newWidth, newHeight, true);
-            platformBitmapType2 = Bitmap.createScaledBitmap(platformBitmapType2Original, newWidth, newHeight, true);
+            passed++;
         }
     }
 
     public int getLevel(int platformPassed) {
-        if(level < maxLevel) {
-            level = platformPassed / 10 ;
+        if (level < maxLevel) {
+            level = platformPassed / 10;
         }
         return level < maxLevel ? level : maxLevel;
     }
+    private void initBackgroundMusic(Context context) {
+        backgroundMusic = MediaPlayer.create(context, R.raw.background_music);
+        backgroundMusic.setLooping(true); // Lặp lại nhạc nền
+        backgroundMusic.setVolume(5.0f, 5.0f); // Đặt âm lượng (giảm nhỏ nếu cần)
+        backgroundMusic.start();
+    }
+
+    private void resetGame() {
+        player.reset(screenWidth, screenHeight); // Reset trạng thái của người chơi
+        platforms.clear();
+        passed = 0;
+        level = 0;
+        createFirstPlatform();
+    }
+
     public void gameOver() {
         Context context = getContext();
         if (context instanceof Activity) {
@@ -215,4 +304,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             activity.finish(); // Kết thúc Activity hiện tại (nếu cần)
         }
     }
+    public static int getScore() {
+        return score;
+    }
+
 }
