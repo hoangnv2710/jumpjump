@@ -25,6 +25,7 @@ import java.util.Random;
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Player player;
     private List<Platform> platforms;
+    private List<Monster> monsters;
     private Handler handler = new Handler();
     private Runnable gameLoop;
     private Bitmap backgroundImage;
@@ -55,6 +56,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         screenWidth = displayMetrics.widthPixels;
         screenHeight = displayMetrics.heightPixels;
         initBackgroundMusic(context);
+        monsters = new ArrayList<>();
 
         Bitmap playerBitmapOnPlatform = BitmapFactory.decodeResource(getResources(), R.drawable.player_on_platform);
         Bitmap playerBitmapInAir = BitmapFactory.decodeResource(getResources(), R.drawable.player_in_air);
@@ -148,6 +150,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                     if (platform != lastTouchedPlatform) {
                         lastTouchedPlatform = platform; // Cập nhật platform cuối cùng
                         score++; // Tăng điểm
+
+                        // Tạo Monster mới với xác suất 10%
+                        if (random.nextInt(2) == 0) { // 10% xác suất
+                            Monster newMonster = new Monster(getContext(), screenWidth, screenHeight);
+                            newMonster.createMonster();
+                            monsters.add(newMonster);
+                        }
                     }
                     player.setY(platform.getY() - player.getBounds().height());
                     player.setVelocityY(player.getJumpStrength());
@@ -163,11 +172,27 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                     createPlatform(); // Create a new platform
                 }
                 count++;
+            }
 
+            // Cập nhật vị trí các quái vật và kiểm tra va chạm
+            for (int i = 0; i < monsters.size(); i++) {
+                Monster monster = monsters.get(i);
+                if (monster.updateM()) {
+                    monsters.remove(i); // Xóa Monster khỏi danh sách nếu nó ra khỏi màn hình
+                    i--; // Điều chỉnh chỉ số để tránh bỏ qua phần tử tiếp theo
+                } else if (player.getBounds().intersect(monster.getBounds())) {
+                    life--; // Giảm mạng sống khi va chạm với quái vật
+                    if (life > 0) {
+                        resetGame();
+                    } else {
+                        gameOver();
+                        isOver = true;
+                    }
+                }
             }
 
             if (player.getY() > screenHeight) {
-                life--; // Decrease the life count
+                life--; // Giảm mạng sống khi người chơi rơi xuống dưới màn hình
                 if (life > 0) {
                     resetGame();
                 } else {
@@ -183,20 +208,31 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         Canvas canvas = getHolder().lockCanvas();
         if (canvas != null) {
             canvas.drawBitmap(backgroundImage, 0, 0, null);
+
+            // Vẽ các platform
             for (Platform platform : platforms) {
                 platform.draw(canvas);
             }
+
+            // Vẽ player
             player.draw(canvas);
+
+            // Vẽ các quái vật
+            for (Monster monster : monsters) {
+                monster.draw(canvas); // Giả sử Monster có phương thức draw(Canvas)
+            }
 
             // Vẽ hình heart đã làm nhỏ ở góc trên cùng bên trái
             int heartX = 20; // Cách lề trái 20px
             int heartY = 20; // Cách lề trên 20px
             canvas.drawBitmap(heartBitmap, heartX, heartY, null);
-            canvas.drawText("x" + life, heartX+heartBitmap.getWidth(), heartY+heartBitmap.getHeight(), lifePaint);
-            canvas.drawText("score: " + score*50, screenWidth/2, heartY+heartBitmap.getHeight(), lifePaint);
+            canvas.drawText("x" + life, heartX + heartBitmap.getWidth(), heartY + heartBitmap.getHeight(), lifePaint);
+            canvas.drawText("score: " + score * 50, screenWidth / 2, heartY + heartBitmap.getHeight(), lifePaint);
+
             getHolder().unlockCanvasAndPost(canvas);
         }
     }
+
 
     public void movePlayerLeft() {
         player.moveLeft();
@@ -240,14 +276,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             int platformY;
             int level = getLevel(passed);
 
+            // Generate a random distance within the maximum jump distance
             int rad = random.nextInt(2 * maxJumpX);
-            int mul = lastPlatformX + platformWidth / 2 > screenWidth / 2 ? -1 : 1;
-            mul *= (random.nextInt(4) > 0 ? 1 : -1);
-            rad = mul * (rad + platformWidth);
-            platformX = lastPlatformX + rad;
-            platformX = platformX < 0 ? 0 : platformX;
-            platformX = platformX + platformWidth > screenWidth ? screenWidth - platformWidth : platformX;
-            int diffX = platformX > lastPlatformX ? platformX - lastPlatformX : lastPlatformX - platformX;
+            int direction = random.nextBoolean() ? 1 : -1; // Randomly choose direction (left or right)
+
+            // Adjust platformX based on direction and ensure it's within screen bounds
+            platformX = lastPlatformX + direction * (rad + platformWidth);
+            platformX = Math.max(0, Math.min(screenWidth - platformWidth, platformX)); // Ensure within bounds
+            if(platformX == 0){
+                platformX = random.nextInt(5)*50;
+            } else if (platformX == screenWidth - platformWidth) {
+                platformX = screenWidth - platformWidth - random.nextInt(5) * 50;
+            }
+            // Calculate the vertical distance
+            int diffX = Math.abs(platformX - lastPlatformX);
             diffX -= platformWidth;
             int maxY = diffX <= maxJumpX ? maxJumpY :
                     player.getJumpStrength() * (diffX / player.getSpeedX()) + player.getGravity() * (diffX / player.getSpeedX()) * (diffX / player.getSpeedX()) / 2;
@@ -272,6 +314,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+
     public int getLevel(int platformPassed) {
         if (level < maxLevel) {
             level = platformPassed / 10;
@@ -291,7 +334,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         passed = 0;
         level = 0;
         createFirstPlatform();
+        monsters.clear();
+
+
     }
+
 
     public void gameOver() {
         Context context = getContext();
@@ -306,6 +353,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
     public static int getScore() {
         return score;
+    }
+    public static void setScore(int newScore) {
+        score = newScore;
     }
 
 }
