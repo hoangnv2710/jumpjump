@@ -1,9 +1,13 @@
 package com.example.test;
 
+import android.graphics.BitmapFactory;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.os.SystemClock;
 import android.graphics.Rect;
 import android.util.DisplayMetrics;
 
@@ -11,6 +15,11 @@ public class Player {
     private Bitmap bitmap; // bitmap hiện tại của player
     private Bitmap bitmapOnPlatform; // bitmap khi player đứng trên bệ
     private Bitmap bitmapInAir; // bitmap khi player đang nhảy trên không
+    private Bitmap[] Player_die;
+    private long lastStateChangeTime; // Thời gian của lần thay đổi trạng thái cuối cùng
+    private static final long STATE_DURATION = 200; // Thời gian tồn tại của mỗi trạng thái (0.1s)
+    private int[] stateSequence = {0, 1}; // Thứ tự các trạng thái
+    private int sequenceIndex = 0; // Chỉ số của trạng thái hiện tại trong stateSequence
     private int x;
     private int y;
     private int velocityY;
@@ -18,7 +27,8 @@ public class Player {
     private long lastOnPlatformTime = 0; // Lưu thời điểm cuối cùng khi chuyển sang OnPlatform
     private static final long ON_PLATFORM_DURATION = 100; // Thời gian giữ trạng thái OnPlatform (ms)
     private boolean isFacingRight = true; // true: hướng phải, false: hướng trái
-    private int state;// 0: on board, 1: in air
+    private boolean isDie = false;
+    private int state; // 0: on board, 1: in air
 
     private int screenWidth;
     private int screenHeight;
@@ -27,10 +37,11 @@ public class Player {
     private int speedX = 10;
     private int maxJumpX;
     private int maxJumpY;
+
     public Player(Bitmap bitmapOnPlatform, Bitmap bitmapInAir, int screenWidth, int screenHeight, Context context) {
         this.bitmapOnPlatform = bitmapOnPlatform;
         this.bitmapInAir = bitmapInAir;
-        this.bitmap = bitmapOnPlatform; //player đứng trên bệ khi bắt đầu trò chơi
+        this.bitmap = bitmapOnPlatform; // player đứng trên bệ khi bắt đầu trò chơi
         this.state = 0;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
@@ -42,12 +53,20 @@ public class Player {
         this.y = screenHeight - distanceFromBottomInPx;
         this.velocityY = jumpStrength;
         int g = (gravity > 0) ? gravity : -gravity;
-        maxJumpX = jumpStrength/g * speedX;
-        maxJumpY = (jumpStrength/g) * (jumpStrength/g) * 1/2 * g;
+        maxJumpX = jumpStrength / g * speedX;
+        maxJumpY = (jumpStrength / g) * (jumpStrength / g) * 1 / 2 * g;
+
+        Bitmap Player_die1 = BitmapFactory.decodeResource(context.getResources(), R.drawable.player);
+        Bitmap Player_die2 = BitmapFactory.decodeResource(context.getResources(), R.drawable.player1);
+        int playerWidth = screenWidth / 8;
+        int playerHeight = screenHeight / 12;
+        Player_die1 = Bitmap.createScaledBitmap(Player_die1, playerWidth, playerHeight, false);
+        Player_die2 = Bitmap.createScaledBitmap(Player_die2, playerWidth, playerHeight, false);
+        Player_die = new Bitmap[]{Player_die1, Player_die2};
     }
 
     public boolean isStop() {
-        if(y <= maxJumpY + bitmap.getHeight() && velocityY >= 0) {
+        if (y <= maxJumpY + bitmap.getHeight() && velocityY >= 0) {
             return true;
         }
         return false;
@@ -63,18 +82,17 @@ public class Player {
     }
 
     public void update() {
-        if(velocityY > 0) {
+        if (velocityY > 0) {
             setState(1);
+        } else {
+            setState(0);
         }
-        else setState(0);
-
 
         if (!isStop()) {
             y -= velocityY;
         }
         velocityY += gravity;
     }
-
 
     public void moveLeft() {
         x -= speedX;
@@ -99,7 +117,18 @@ public class Player {
     }
 
     public void draw(Canvas canvas) {
-        canvas.drawBitmap(bitmap, x, y, null);
+        if (isDie) {
+            // Xử lý animation chết
+            long currentTime = SystemClock.elapsedRealtime();
+            if (currentTime - lastStateChangeTime > STATE_DURATION) {
+                sequenceIndex = (sequenceIndex + 1) % Player_die.length;
+                lastStateChangeTime = currentTime;
+            }
+            canvas.drawBitmap(Player_die[sequenceIndex], x, y, null);
+        } else {
+            // Vẽ player bình thường
+            canvas.drawBitmap(bitmap, x, y, null);
+        }
     }
 
     public void setState(int newState) {
@@ -138,6 +167,10 @@ public class Player {
         this.maxJumpY = maxJumpY;
     }
 
+    public void setJumpStrength(int jumpStrength) {
+        this.jumpStrength = jumpStrength;
+    }
+
     public int getY() {
         return y;
     }
@@ -152,6 +185,10 @@ public class Player {
 
     public int getX() {
         return this.x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
     }
 
     public void setVelocityY(int velocityY) {
@@ -173,9 +210,18 @@ public class Player {
     public void setSpeedX(int speedX) {
         this.speedX = speedX;
     }
+
     public void reset(int screenWidth, int screenHeight) {
         this.x = (screenWidth - bitmap.getWidth()) / 2;
         this.y = screenHeight - (int) (3.0f * screenHeight / 2.54f / 2.54f);
         this.velocityY = jumpStrength;
+    }
+
+    public void setIsDie(boolean isDie) {
+        this.isDie = isDie;
+        if (isDie) {
+            sequenceIndex = 0; // Bắt đầu từ frame đầu tiên của animation
+            lastStateChangeTime = SystemClock.elapsedRealtime(); // Reset thời gian
+        }
     }
 }

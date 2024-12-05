@@ -44,13 +44,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private MediaPlayer backgroundMusic;
     boolean isOver = false;
     private Platform lastTouchedPlatform = null;
+    private Platform lastTouchedPlatform_score = null;
+    private Platform lastTouchedPlatform_type1 = null;
     private int life = 3; // Biến đếm số mạng của người chơi
     private Paint lifePaint = new Paint();
     private Paint scorePaint = new Paint();
-
+    private MainActivity mainActivity;
 
     public GameView(Context context) {
         super(context);
+        if (context instanceof MainActivity) {
+            this.mainActivity = (MainActivity) context;  // Lưu tham chiếu đến MainActivity
+        }
         getHolder().addCallback(this);
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         screenWidth = displayMetrics.widthPixels;
@@ -148,11 +153,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         platform.getX() <= player.getX() + player.getBounds().width() / 2 &&
                         platform.getX() + platform.getBounds().width() >= player.getX() + player.getBounds().width() / 2) {
                     if (platform != lastTouchedPlatform) {
+                        if(platform.getY() < lastTouchedPlatform_score.getY()) {
+                            lastTouchedPlatform_score = platform;
+                            score++; // Tăng điểm
+                        }
+                        if(platform.getType() == 1) {
+                            lastTouchedPlatform_type1 = platform;
+                        }
                         lastTouchedPlatform = platform; // Cập nhật platform cuối cùng
-                        score++; // Tăng điểm
-
                         // Tạo Monster mới với xác suất 10%
-                        if (random.nextInt(2) == 0) { // 10% xác suất
+                        if (random.nextInt(5) == 0) { // 10% xác suất
                             Monster newMonster = new Monster(getContext(), screenWidth, screenHeight);
                             newMonster.createMonster();
                             monsters.add(newMonster);
@@ -262,6 +272,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         Platform firstPlatform = new Platform(platformBitmap, platformX, platformY, 1);
         platforms.add(firstPlatform);
         lastTouchedPlatform = firstPlatform;
+        lastTouchedPlatform_score = firstPlatform;
+        lastTouchedPlatform_type1 = firstPlatform;
         player.setY(platformY - player.getBounds().height());
         platformWidth = platformBitmap.getWidth();
         platformHeight = platformBitmap.getHeight();
@@ -329,17 +341,39 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     private void resetGame() {
-        player.reset(screenWidth, screenHeight); // Reset trạng thái của người chơi
-        platforms.clear();
-        passed = 0;
-        level = 0;
-        createFirstPlatform();
-        monsters.clear();
+        if (lastTouchedPlatform_type1 != null) {
+            if (mainActivity != null) {
+                mainActivity.disableInput();
+                // Ngừng các sự kiện của Handler
+                mainActivity.handler.removeCallbacks(mainActivity.moveLeftRunnable);
+                mainActivity.handler.removeCallbacks(mainActivity.moveRightRunnable);
+            }
 
+            int playerCenterX = lastTouchedPlatform_type1.getX() +
+                    (lastTouchedPlatform_type1.getBounds().width() - player.getBounds().width()) / 2;
+            int playerY = lastTouchedPlatform_type1.getY() - player.getBounds().height();
 
+            player.setX(playerCenterX);
+            player.setY(playerY);
+
+            int original_JumpStrength = player.getJumpStrength();
+            player.setJumpStrength(0);  // Ngăn không cho nhảy trong khi reset
+            player.setIsDie(true);
+
+            // Khôi phục trạng thái sau 3 giây và mở lại input
+            new android.os.Handler().postDelayed(() -> {
+                player.setJumpStrength(original_JumpStrength);
+                if (mainActivity != null) {
+                    mainActivity.enableInput();  // Mở lại input sau khi reset xong
+                    player.setIsDie(false);
+                }
+            }, 1000);  // Chờ 3 giây
+        } else {
+            createFirstPlatform();  // Nếu không có platform nào, tạo platform đầu tiên
+        }
+
+        monsters.clear();  // Xóa danh sách quái vật
     }
-
-
     public void gameOver() {
         Context context = getContext();
         if (context instanceof Activity) {
