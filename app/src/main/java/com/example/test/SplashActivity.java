@@ -25,6 +25,7 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+                GameView.setScore(0);
                 startActivity(intent);
             }
         });

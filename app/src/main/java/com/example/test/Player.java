@@ -137,6 +137,9 @@ public class Player {
     public void setMaxJumpY(int maxJumpY) {
         this.maxJumpY = maxJumpY;
     }
+    public void setJumpStrength(int jumpStrength) {
+        this.jumpStrength = jumpStrength;
+    }
 
     public int getY() {
         return y;
@@ -152,6 +155,9 @@ public class Player {
 
     public int getX() {
         return this.x;
+    }
+    public void setX(int x) {
+        this.x = x;
     }
 
     public void setVelocityY(int velocityY) {
