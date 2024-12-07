@@ -26,6 +26,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Player player;
     private List<Platform> platforms;
     private List<Monster> monsters;
+    private List<Item> items = new ArrayList<>();
     private Handler handler = new Handler();
     private Runnable gameLoop;
     private Bitmap backgroundImage;
@@ -46,7 +47,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Platform lastTouchedPlatform = null;
     private Platform lastTouchedPlatform_score = null;
     private Platform lastTouchedPlatform_type1 = null;
-    private int life = 3; // Biến đếm số mạng của người chơi
+    private static int life = 3; // Biến đếm số mạng của người chơi
     private Paint lifePaint = new Paint();
     private Paint scorePaint = new Paint();
     private MainActivity mainActivity;
@@ -62,6 +63,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         screenHeight = displayMetrics.heightPixels;
         initBackgroundMusic(context);
         monsters = new ArrayList<>();
+        Item newItem = new Item(context, screenWidth, screenHeight);
 
         Bitmap playerBitmapOnPlatform = BitmapFactory.decodeResource(getResources(), R.drawable.player_on_platform);
         Bitmap playerBitmapInAir = BitmapFactory.decodeResource(getResources(), R.drawable.player_in_air);
@@ -103,7 +105,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         playerBitmapInAir = Bitmap.createScaledBitmap(playerBitmapInAir, playerWidth, playerHeight, false);
 
         //Platform bitmap scale
-        int platform1Width = screenWidth / 6;
+        int platform1Width = screenWidth / 5;
         int platform1Height = screenHeight / 30;
         platformBitmap = Bitmap.createScaledBitmap(platformBitmapOriginal, platform1Width, platform1Height, true);
         platformBitmapType2 = Bitmap.createScaledBitmap(platformBitmapType2Original, platform1Width, platform1Height, true);
@@ -167,6 +169,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                             newMonster.createMonster();
                             monsters.add(newMonster);
                         }
+                        if (random.nextInt(2) == 0) { // 20% xác suất
+                            Item newItem = new Item( getContext(),screenWidth, screenHeight);
+                            newItem.createItem_2(); // Tạo Item rơi từ trên
+                            items.add(newItem); // Thêm vào danh sách quản lý
+                        }
                     }
                     player.setY(platform.getY() - player.getBounds().height());
                     player.setVelocityY(player.getJumpStrength());
@@ -179,9 +186,28 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 if (platform.getY() >= screenHeight - platform.getBounds().height()) {
                     platforms.remove(count);
                     count--;
-                    createPlatform(); // Create a new platform
+                    createPlatform();// Create a new platform
                 }
                 count++;
+            }
+
+            for (int i = 0; i < items.size(); i++) {
+                Item item = items.get(i);
+
+                // Update the item (move it, check if it goes off-screen)
+                if (item.updateI()) {
+                    items.remove(i); // Remove item from the list if it goes off-screen
+                    i--; // Adjust the index to avoid skipping the next item
+                } else if (player.getBounds().intersect(item.getBounds())) {
+                    // Handle item-player collision
+                    if (item.getItemId() == 0) { // Heart item (example)
+                        life++;  // Increase life
+                    } else if (item.getItemId() == 1) { // x2 item (example)
+                        score *= 2;  // Double score
+                    }
+                    items.remove(i); // Remove the item after it is collected
+                    i--; // Adjust the index to avoid skipping the next item
+                }
             }
 
             // Cập nhật vị trí các quái vật và kiểm tra va chạm
@@ -229,9 +255,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
             // Vẽ các quái vật
             for (Monster monster : monsters) {
-                monster.draw(canvas); // Giả sử Monster có phương thức draw(Canvas)
+                monster.draw(canvas);
             }
-
+            // Vẽ các Items
+            for (Item item : items) {
+                item.draw(canvas);
+            }
             // Vẽ hình heart đã làm nhỏ ở góc trên cùng bên trái
             int heartX = 20; // Cách lề trái 20px
             int heartY = 20; // Cách lề trên 20px
@@ -309,7 +338,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             platformY = lastPlatformY - rad - platformHeight;
 
             // Randomize platform type (1: static, 2: moving horizontally)
-            int platformType = random.nextInt(10) < 2 ? 2 : 1; // 20% chance for type 2
+            int platformType = random.nextInt(100) < 2 ? 2 : 1; // 20% chance for type 2
 
             if (platformType == 2) {
                 // Create moving platform
@@ -323,6 +352,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             }
 
             passed++;
+        }
+        Platform lastPlatform = platforms.get(platforms.size() - 1);
+        if (random.nextInt(2) == 0 && lastPlatform.getType()==1 && !lastPlatform.hasItem()) { // 10% xác suất
+            Item newItem = new Item( getContext(),screenWidth, screenHeight);
+            newItem.createItem_1(platforms,platformWidth,platformHeight); // Tạo Item rơi từ trên
+            items.add(newItem); // Thêm vào danh sách quản lý
         }
     }
 
@@ -373,6 +408,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         monsters.clear();  // Xóa danh sách quái vật
+        items.clear();
+        passed = 0;
     }
     public void gameOver() {
         Context context = getContext();
@@ -390,6 +427,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
     public static void setScore(int newScore) {
         score = newScore;
+    }
+    public static int getLife() {
+        return life;
+    }
+    public static void setLife(int newLife) {
+        life = newLife;
     }
 
 }

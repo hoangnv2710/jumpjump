@@ -11,15 +11,17 @@ public class Platform {
     private int type;
     private int velocityX; // Velocity for horizontal movement
     private int minX, maxX; // Boundaries for horizontal movement
+    private boolean hasItem; // Indicates if this platform already has an item
 
     public Platform(Bitmap bitmap, int x, int y, int type) {
         this.bitmap = bitmap;
         this.x = x;
         this.y = y;
         this.type = type;
+        this.hasItem = false; // Default to no item
     }
 
-    public Platform(Bitmap bitmap,int x, int y, int type, int velocityX, int minX, int maxX) {
+    public Platform(Bitmap bitmap, int x, int y, int type, int velocityX, int minX, int maxX) {
         this.bitmap = bitmap;
         this.x = x;
         this.y = y;
@@ -27,6 +29,7 @@ public class Platform {
         this.velocityX = velocityX;
         this.minX = minX;
         this.maxX = maxX;
+        this.hasItem = false; // Default to no item
     }
 
     public void draw(Canvas canvas) {
@@ -53,6 +56,14 @@ public class Platform {
         return velocityX;
     }
 
+    public boolean hasItem() {
+        return hasItem;
+    }
+
+    public void setHasItem(boolean hasItem) {
+        this.hasItem = hasItem;
+    }
+
     public void setX(int x) {
         this.x = x;
     }
@@ -64,12 +75,6 @@ public class Platform {
     public void setType(int type) {
         this.type = type;
     }
-
-//    public static int getLevel() {
-//        return level;
-//    }
-
-
 
     // Method to update position for moving platforms
     public void updateP() {
