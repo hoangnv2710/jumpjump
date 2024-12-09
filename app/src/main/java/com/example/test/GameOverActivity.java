@@ -37,6 +37,7 @@ public class GameOverActivity extends AppCompatActivity {
             public void onClick(View view) {
                 // Quay lại MainActivity
                 GameView.setScore(0);
+                GameView.setLife(3);
                 Intent intent = new Intent(GameOverActivity.this, MainActivity.class);
                 startActivity(intent);
                 finish();
