@@ -428,12 +428,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public void gameOver() {
         Context context = getContext();
         if (context instanceof Activity) {
+            backgroundMusic.stop();
             Activity activity = (Activity) context;
 
             Intent intent = new Intent(activity, GameOverActivity.class);
 
             activity.startActivity(intent);
             activity.finish(); // Kết thúc Activity hiện tại (nếu cần)
+
         }
     }
     public static int getScore() {
