@@ -33,6 +33,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Bitmap platformBitmap;
     private Bitmap platformBitmapType2;
     private Bitmap heartBitmap;
+    private Bitmap x2Bitmap;
+
     private Random random;
     private int screenWidth, screenHeight;
     private int platformWidth, platformHeight;
@@ -41,6 +43,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private int passed = 0;
     private int level = 0;
     private static int score = 0;
+    int scoreMultiplier = 1;  // Hệ số nhân, ban đầu là 1
+    int multiplierCount = 0;  // Đếm số lần x2 còn lại
     private int maxLevel = 5;
     private MediaPlayer backgroundMusic;
     boolean isOver = false;
@@ -68,6 +72,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         Bitmap playerBitmapOnPlatform = BitmapFactory.decodeResource(getResources(), R.drawable.player_on_platform);
         Bitmap playerBitmapInAir = BitmapFactory.decodeResource(getResources(), R.drawable.player_in_air);
 
+        Bitmap item2Bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.x2);
         Bitmap platformBitmapOriginal = BitmapFactory.decodeResource(getResources(), R.drawable.blue_cloud);
         Bitmap platformBitmapType2Original = BitmapFactory.decodeResource(getResources(), R.drawable.blue_cloud);
         backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.back_ing_1);
@@ -124,6 +129,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         int heartHeight = heartBitmapOriginal.getHeight() / 10;
         heartBitmap = Bitmap.createScaledBitmap(heartBitmapOriginal, heartWidth, heartHeight, true);
 
+        Bitmap x2BitmapOriginal = BitmapFactory.decodeResource(getResources(), R.drawable.x2);
+        int x2Width = heartBitmapOriginal.getWidth() / 5;
+        int x2Height = heartBitmapOriginal.getHeight() / 5;
+        x2Bitmap = Bitmap.createScaledBitmap(x2BitmapOriginal, x2Width, x2Height, true);
         gameLoop = new Runnable() {
             @Override
             public void run() {
@@ -157,7 +166,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                     if (platform != lastTouchedPlatform) {
                         if(platform.getY() < lastTouchedPlatform_score.getY()) {
                             lastTouchedPlatform_score = platform;
-                            score++; // Tăng điểm
+                            increaseScore(1); // Tăng điểm
                         }
                         if(platform.getType() == 1) {
                             lastTouchedPlatform_type1 = platform;
@@ -169,7 +178,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                             newMonster.createMonster();
                             monsters.add(newMonster);
                         }
-                        if (random.nextInt(2) == 0) { // 20% xác suất
+                        if (random.nextInt(7) == 0) { // 1/7 xác suất
                             Item newItem = new Item( getContext(),screenWidth, screenHeight);
                             newItem.createItem_2(); // Tạo Item rơi từ trên
                             items.add(newItem); // Thêm vào danh sách quản lý
@@ -203,7 +212,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                     if (item.getItemId() == 0) { // Heart item (example)
                         life++;  // Increase life
                     } else if (item.getItemId() == 1) { // x2 item (example)
-                        score *= 2;  // Double score
+                        scoreMultiplier = 2;
+                        multiplierCount = 10;
                     }
                     items.remove(i); // Remove the item after it is collected
                     i--; // Adjust the index to avoid skipping the next item
@@ -264,11 +274,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             // Vẽ hình heart đã làm nhỏ ở góc trên cùng bên trái
             int heartX = 20; // Cách lề trái 20px
             int heartY = 20; // Cách lề trên 20px
+            if (scoreMultiplier > 1){
+                canvas.drawBitmap(x2Bitmap, 20, 100, null);
+            }
             canvas.drawBitmap(heartBitmap, heartX, heartY, null);
             canvas.drawText("x" + life, heartX + heartBitmap.getWidth(), heartY + heartBitmap.getHeight(), lifePaint);
             canvas.drawText("score: " + score * 50, screenWidth / 2, heartY + heartBitmap.getHeight(), lifePaint);
 
             getHolder().unlockCanvasAndPost(canvas);
+
         }
     }
 
@@ -354,7 +368,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             passed++;
         }
         Platform lastPlatform = platforms.get(platforms.size() - 1);
-        if (random.nextInt(2) == 0 && lastPlatform.getType()==1 && !lastPlatform.hasItem()) { // 10% xác suất
+        if (random.nextInt(7) == 0 && lastPlatform.getType()==1 && !lastPlatform.hasItem()) {
             Item newItem = new Item( getContext(),screenWidth, screenHeight);
             newItem.createItem_1(platforms,platformWidth,platformHeight); // Tạo Item rơi từ trên
             items.add(newItem); // Thêm vào danh sách quản lý
@@ -434,5 +448,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public static void setLife(int newLife) {
         life = newLife;
     }
+    public void increaseScore(int basePoints) {
+        score += basePoints * scoreMultiplier;  // Cộng điểm đã nhân hệ số
 
+        // Nếu đang trong trạng thái x2, giảm số lần còn lại
+        if (scoreMultiplier > 1) {
+            multiplierCount--;
+            if (multiplierCount <= 0) {
+                scoreMultiplier = 1;  // Hệ số nhân trở về bình thường
+                multiplierCount = 0;  // Reset số lần đếm
+            }
+        }
+    }
 }
