@@ -186,7 +186,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                             newMonster.createMonster();
                             monsters.add(newMonster);
                         }
-                        if (random.nextInt(7) == 0) { // 1/7 xác suất
+                        if (random.nextInt(10) == 0) { // 1/ xác suất
                             Item newItem = new Item( getContext(),screenWidth, screenHeight);
                             newItem.createItem_2(); // Tạo Item rơi từ trên
                             items.add(newItem); // Thêm vào danh sách quản lý
@@ -347,7 +347,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             platformX = lastPlatformX + direction * (rad + platformWidth);
             platformX = Math.max(0, Math.min(screenWidth - platformWidth, platformX)); // Ensure within bounds
             if(platformX == 0){
-                platformX = random.nextInt(5)*50;
+                platformX = 10(5)*50;
             } else if (platformX == screenWidth - platformWidth) {
                 platformX = screenWidth - platformWidth - random.nextInt(5) * 50;
             }
