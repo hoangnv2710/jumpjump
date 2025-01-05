@@ -5,12 +5,13 @@
     android:background="@drawable/back_ing">
 
     <!-- Khung chứa GameView -->
+
+    <!-- Nút mũi tên trái -->
     <FrameLayout
         android:id="@+id/game_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
-    <!-- Nút mũi tên trái -->
     <ImageButton
         android:id="@+id/btn_left"
         android:layout_width="80dp"
@@ -31,5 +32,47 @@
         android:layout_margin="40dp"
         android:background="@drawable/button_right"
         android:contentDescription="Move player to the right"/>
+
+    <!-- Nút tạm dừng -->
+    <ImageButton
+        android:id="@+id/btn_pause"
+        android:layout_width="49dp"
+        android:layout_height="51dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/button_pause"
+        android:contentDescription="Pause the game" />
+
+    <!-- Menu khi tạm dừng -->
+    <LinearLayout
+        android:id="@+id/pause_menu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#80000000"
+        android:visibility="gone">
+
+        <!-- Nút tiếp tục -->
+        <Button
+            android:id="@+id/btn_resume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Resume"
+            android:fontFamily="@font/daydream"/>
+
+        <!-- Nút quay lại menu -->
+        <Button
+            android:id="@+id/btn_back_to_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Back to Menu"
+            android:fontFamily="@font/daydream"/>
+    </LinearLayout>
 
 </RelativeLayout>

@@ -33,8 +33,8 @@ public class Monster {
         Bitmap dragon3 = BitmapFactory.decodeResource(context.getResources(), R.drawable.dragon3);
 
         // Resize hình ảnh để phù hợp với màn hình
-        this.monsterWidth = screenWidth / 4;
-        this.monsterHeight = screenHeight / 12;
+        this.monsterWidth = screenWidth / 3;
+        this.monsterHeight = screenHeight / 8;
         dragon1 = Bitmap.createScaledBitmap(dragon1, monsterWidth, monsterHeight, false);
         dragon2 = Bitmap.createScaledBitmap(dragon2, monsterWidth, monsterHeight, false);
         dragon3 = Bitmap.createScaledBitmap(dragon3, monsterWidth, monsterHeight, false);

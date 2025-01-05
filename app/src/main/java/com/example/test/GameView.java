@@ -55,6 +55,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Paint lifePaint = new Paint();
     private Paint scorePaint = new Paint();
     private MainActivity mainActivity;
+    boolean PauseState;
 
     public GameView(Context context) {
         super(context);
@@ -68,7 +69,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         initBackgroundMusic(context);
         monsters = new ArrayList<>();
         Item newItem = new Item(context, screenWidth, screenHeight);
-
+        PauseState = mainActivity.getPauseState();
         Bitmap playerBitmapOnPlatform = BitmapFactory.decodeResource(getResources(), R.drawable.player_on_platform);
         Bitmap playerBitmapInAir = BitmapFactory.decodeResource(getResources(), R.drawable.player_in_air);
 
@@ -136,7 +137,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         gameLoop = new Runnable() {
             @Override
             public void run() {
-                update();
+                if(!isGamePaused()) {
+                    backgroundMusic.start();
+                    update();
+                }
+                else {
+                    backgroundMusic.pause();
+                }
                 drawGame();
                 handler.postDelayed(this, 10);  // approximately 60 FPS
             }
@@ -144,6 +151,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update() {
+
         if (!isOver) {
             if (player.getVelocityY() <= -platformHeight) {
                 player.setVelocityY(-platformHeight + 1);
@@ -460,6 +468,21 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 scoreMultiplier = 1;  // Hệ số nhân trở về bình thường
                 multiplierCount = 0;  // Reset số lần đếm
             }
+        }
+    }
+
+    // Phương thức để lấy trạng thái Pause từ MainActivity
+    public boolean isGamePaused() {
+        if (mainActivity != null) {
+            return mainActivity.getPauseState();  // Gọi phương thức getPauseState trong MainActivity
+        }
+        return false;  // Nếu không thể lấy giá trị, trả về false
+    }
+
+    // Phương thức để cập nhật trạng thái Pause trong MainActivity
+    public void setGamePaused(boolean isPaused) {
+        if (mainActivity != null) {
+            mainActivity.setGamePaused(isPaused);  // Gọi phương thức setGamePaused trong MainActivity
         }
     }
 }
