@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 
 public class GameOverActivity extends AppCompatActivity {
-    Button btnReplay;
+    Button btnReplay, btnBackToMenu;  // Thêm nút Back to Menu
     TextView txtScore;
 
     @Override
@@ -21,13 +21,12 @@ public class GameOverActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_game_over);
 
-        // Lấy điểm số từ Intent (nếu có)
         Intent intent = getIntent();
-        int score = intent.getIntExtra("SCORE", 0);  // Mặc định là 0 nếu không có điểm số
+        int score = intent.getIntExtra("SCORE", 0);
 
-        // Khởi tạo các View
         btnReplay = findViewById(R.id.button2);
         txtScore = findViewById(R.id.your_score);
+        btnBackToMenu = findViewById(R.id.buttonBackToMenu); // Khởi tạo nút Back to Menu
 
         // Lấy điểm số từ GameView
         score = GameView.getScore();
@@ -61,6 +60,17 @@ public class GameOverActivity extends AppCompatActivity {
                 Intent intent = new Intent(GameOverActivity.this, MainActivity.class);
                 startActivity(intent);
                 finish();
+            }
+        });
+
+        // Đặt sự kiện cho nút Back to Menu
+        btnBackToMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Quay lại SplashActivity
+                Intent intent = new Intent(GameOverActivity.this, SplashActivity.class);
+                startActivity(intent);
+                finish();  // Hủy GameOverActivity
             }
         });
     }

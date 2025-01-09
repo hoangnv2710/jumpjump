@@ -360,7 +360,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             platformY = lastPlatformY - rad - platformHeight;
 
             // Randomize platform type (1: static, 2: moving horizontally)
-            int platformType = random.nextInt(100) < 2 ? 2 : 1; // 20% chance for type 2
+            int platformType = random.nextInt(100) < 20 ? 2 : 1; // 20% chance for type 2
 
 
             if (platformType == 2) {
@@ -386,10 +386,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
 
     public int getLevel(int platformPassed) {
-        if (level < maxLevel) {
-            level = platformPassed / 10;
+        if (level < maxLevel - 1) {
+            level = platformPassed / 20;
         }
-        return level < maxLevel ? level : maxLevel;
+        return level < maxLevel - 1 ? level : maxLevel - 1;
     }
     private void initBackgroundMusic(Context context) {
         backgroundMusic = MediaPlayer.create(context, R.raw.background_music);
@@ -432,7 +432,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         monsters.clear();  // Xóa danh sách quái vật
         items.clear();
-        passed = 0;
     }
     public void gameOver() {
         Context context = getContext();
