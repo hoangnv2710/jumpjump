@@ -9,6 +9,8 @@ import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.ArrayList;
+
 public class GameOverActivity extends AppCompatActivity {
     Button btnReplay;
     TextView txtScore;
@@ -19,7 +21,7 @@ public class GameOverActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_game_over);
 
-        // Lấy điểm số từ Intent
+        // Lấy điểm số từ Intent (nếu có)
         Intent intent = getIntent();
         int score = intent.getIntExtra("SCORE", 0);  // Mặc định là 0 nếu không có điểm số
 
@@ -27,9 +29,27 @@ public class GameOverActivity extends AppCompatActivity {
         btnReplay = findViewById(R.id.button2);
         txtScore = findViewById(R.id.your_score);
 
+        // Lấy điểm số từ GameView
         score = GameView.getScore();
-        // Hiển thị điểm số
-        txtScore.setText("Your Score: " + score*50);
+
+        // Lấy danh sách điểm cao đã được sắp xếp
+        ArrayList<String> highScores = HighScoreManager.getFormattedHighScores(this);
+
+        // Tìm rank của người chơi trong danh sách điểm cao
+        int rank = -1;
+        for (int i = 0; i < highScores.size(); i++) {
+            if (highScores.get(i).contains(String.valueOf(50*score))) {
+                rank = i + 1; // Vị trí trong danh sách (bắt đầu từ 1)
+                break;
+            }
+        }
+
+        // Hiển thị điểm số và rank nếu có
+        if (rank != -1) {
+            txtScore.setText("Your Score: " + (score * 50) + "\nRank " + rank + " in High Scores");
+        } else {
+            txtScore.setText("Your Score: " + (score * 50));
+        }
 
         // Đặt sự kiện cho nút Replay
         btnReplay.setOnClickListener(new View.OnClickListener() {

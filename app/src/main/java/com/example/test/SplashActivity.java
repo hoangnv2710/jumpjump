@@ -7,19 +7,17 @@ import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 public class SplashActivity extends AppCompatActivity {
-    Button btnStart;
+    Button btnStart, btnHighScores;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_splash);
 
-        // Đặt sự kiện khi nhấn vào toàn bộ màn hình để chuyển sang MainActivity
+        // Khởi tạo nút START
         btnStart = findViewById(R.id.btnStart);
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -30,6 +28,16 @@ public class SplashActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-    }
 
+        // Khởi tạo nút HIGH SCORES
+        btnHighScores = findViewById(R.id.btnHighScores);
+        btnHighScores.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Chuyển sang màn hình hiển thị High Scores
+                Intent intent = new Intent(SplashActivity.this, HighScoresActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
 }

@@ -38,4 +38,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <!-- Thêm nút High Scores bên dưới nút START -->
+    <Button
+        android:id="@+id/btnHighScores"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="#00FFFFFF"
+        android:fontFamily="@font/daydream"
+        android:text="HIGH SCORES"
+        android:textSize="24sp"
+        app:layout_constraintTop_toBottomOf="@id/btnStart"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

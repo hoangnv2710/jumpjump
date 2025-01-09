@@ -13,6 +13,9 @@
         android:theme="@style/Theme.Test"
         tools:targetApi="31">
         <activity
+            android:name=".HighScoresActivity"
+            android:exported="false" />
+        <activity
             android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
@@ -21,14 +24,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".GameOverActivity"
             android:exported="true" />
         <activity
             android:name=".MainActivity"
-            android:exported="true">
-        </activity>
+            android:exported="true"></activity>
     </application>
 
 </manifest>

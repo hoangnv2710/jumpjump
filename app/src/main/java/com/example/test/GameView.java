@@ -347,7 +347,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             platformX = lastPlatformX + direction * (rad + platformWidth);
             platformX = Math.max(0, Math.min(screenWidth - platformWidth, platformX)); // Ensure within bounds
             if(platformX == 0){
-                platformX = 10(5)*50;
+                platformX = random.nextInt(5)*50;
             } else if (platformX == screenWidth - platformWidth) {
                 platformX = screenWidth - platformWidth - random.nextInt(5) * 50;
             }
@@ -361,6 +361,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
             // Randomize platform type (1: static, 2: moving horizontally)
             int platformType = random.nextInt(100) < 2 ? 2 : 1; // 20% chance for type 2
+
 
             if (platformType == 2) {
                 // Create moving platform
@@ -436,16 +437,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public void gameOver() {
         Context context = getContext();
         if (context instanceof Activity) {
+            // Lưu điểm cao của người chơi trước khi chuyển màn hình
+            HighScoreManager.saveHighScore(context, 50*getScore());
+
+            // Dừng nhạc nền
             backgroundMusic.stop();
+
             Activity activity = (Activity) context;
 
+            // Chuyển đến màn hình Game Over
             Intent intent = new Intent(activity, GameOverActivity.class);
 
             activity.startActivity(intent);
-            activity.finish(); // Kết thúc Activity hiện tại (nếu cần)
-
+            activity.finish(); // Kết thúc Activity hiện tại
         }
     }
+
     public static int getScore() {
         return score;
     }
