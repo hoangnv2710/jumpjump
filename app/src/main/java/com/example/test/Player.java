@@ -57,7 +57,7 @@ public class Player {
         maxJumpY = (jumpStrength / g) * (jumpStrength / g) * 1 / 2 * g;
 
         Bitmap Player_die1 = BitmapFactory.decodeResource(context.getResources(), R.drawable.player);
-        Bitmap Player_die2 = BitmapFactory.decodeResource(context.getResources(), R.drawable.player1);
+        Bitmap Player_die2 = BitmapFactory.decodeResource(context.getResources(), R.drawable.clear);
         int playerWidth = screenWidth / 8;
         int playerHeight = screenHeight / 12;
         Player_die1 = Bitmap.createScaledBitmap(Player_die1, playerWidth, playerHeight, false);
