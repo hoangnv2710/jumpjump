@@ -32,20 +32,20 @@ public class GameOverActivity extends AppCompatActivity {
         // Lấy điểm số từ GameView
         score = GameView.getScore();
 
-        // Lấy danh sách điểm cao đã được sắp xếp
-        ArrayList<String> highScores = HighScoreManager.getFormattedHighScores(this);
+        // Lấy danh sách điểm cao dạng số nguyên
+        ArrayList<Integer> highScores = HighScoreManager.getRawHighScores(this);
 
         // Tìm rank của người chơi trong danh sách điểm cao
         int rank = -1;
         for (int i = 0; i < highScores.size(); i++) {
-            if (highScores.get(i).contains(String.valueOf(50*score))) {
+            if (highScores.get(i) == 50 * score) { // So sánh chính xác giá trị điểm
                 rank = i + 1; // Vị trí trong danh sách (bắt đầu từ 1)
                 break;
             }
         }
 
         // Hiển thị điểm số và rank nếu có
-        if (rank != -1) {
+        if (rank != -1 && score != 0) {
             txtScore.setText("Your Score: " + (score * 50) + "\nRank " + rank + " in High Scores");
         } else {
             txtScore.setText("Your Score: " + (score * 50));

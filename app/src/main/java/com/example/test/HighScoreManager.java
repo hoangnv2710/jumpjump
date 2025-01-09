@@ -9,7 +9,7 @@ import java.util.Collections;
 public class HighScoreManager {
     private static final String PREF_NAME = "HighScoresPref";
     private static final String SCORES_KEY = "HighScores";
-    private static final int MAX_SCORES = 5; // Số lượng điểm cao tối đa
+    private static final int MAX_SCORES = 10; // Số lượng điểm cao tối đa
 
     // Lưu điểm cao mới
     public static void saveHighScore(Context context, int score) {
@@ -39,7 +39,7 @@ public class HighScoreManager {
         editor.apply();
     }
 
-    // Lấy danh sách điểm cao
+    // Lấy danh sách điểm cao dạng số nguyên
     public static ArrayList<Integer> getHighScores(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         String scoresString = prefs.getString(SCORES_KEY, "");
@@ -56,6 +56,11 @@ public class HighScoreManager {
             }
         }
         return highScores;
+    }
+
+    // Phương thức mới: Lấy danh sách điểm cao dạng số nguyên (tương tự getHighScores)
+    public static ArrayList<Integer> getRawHighScores(Context context) {
+        return getHighScores(context);
     }
 
     // Lấy danh sách điểm cao dạng chuỗi định dạng "1. xxxx point"
