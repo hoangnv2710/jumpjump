@@ -9,7 +9,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class SplashActivity extends AppCompatActivity {
-    Button btnStart, btnHighScores;
+    Button btnStart, btnHighScores, btnExit; // Khai báo thêm btnExit
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +37,16 @@ public class SplashActivity extends AppCompatActivity {
                 // Chuyển sang màn hình hiển thị High Scores
                 Intent intent = new Intent(SplashActivity.this, HighScoresActivity.class);
                 startActivity(intent);
+            }
+        });
+
+        // Khởi tạo nút EXIT
+        btnExit = findViewById(R.id.btnExit);
+        btnExit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish(); // Kết thúc Activity hiện tại
+                System.exit(0); // Thoát hoàn toàn ứng dụng
             }
         });
     }
